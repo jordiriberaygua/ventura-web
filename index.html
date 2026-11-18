@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html lang="ca" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ventura • Històries amb ànima</title>
+  <meta name="description" content="Ventura Films — Productora audiovisual i cinematografia a Andorra. Marc Martos & Jordi Riberaygua." />
+
+  <!-- Google Fonts Fallbacks (si els arxius .ttf locals encara no s'han carregat) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Condensed:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,800;9..144,900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React 18 & Babel Standalone CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* ======================================================================
+       1. TIPOGRAFIES OFICIALS DEL MANUAL DE MARCA (.TTF LOCALS A /fonts/)
+       Quan pugis la carpeta a Vercel, posa els teus .ttf dins la carpeta "fonts/"
+    ====================================================================== */
+    @font-face {
+      font-family: 'Nicholas';
+      src: url('./fonts/Nicholas.ttf') format('truetype'),
+           url('./fonts/Nicholas-ExtraBold.ttf') format('truetype');
+      font-weight: 800 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Field Gothic Wide';
+      src: url('./fonts/FieldGothicWide.ttf') format('truetype'),
+           url('./fonts/FieldGothicWide-Bold.ttf') format('truetype');
+      font-weight: 400 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* Gr gra de pel·lícula analògica 35mm */
+    .ventura-film-grain {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 90;
+      opacity: 0.065;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.28s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-[#000000] text-[#FCF0D6] antialiased selection:bg-[#B40023] selection:text-[#FCF0D6] overflow-x-hidden">
+
+  <!-- Contenidor Principal React -->
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ========================================================================
+    // ICONES VECTORIALS INTEGRATS (SENSE DEPENDÈNCIES EXTERNES)
+    // ========================================================================
+    const IconPlay = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5" className={className}>
+        <polygon points="5 3 19 12 5 21 5 3" />
+      </svg>
+    );
+    const IconX = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    );
+    const IconArrowUpRight = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <line x1="7" y1="17" x2="17" y2="7" /><polyline points="7 7 17 7 17 17" />
+      </svg>
+    );
+    const IconVolume2 = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+      </svg>
+    );
+    const IconVolumeX = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+        <line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" />
+      </svg>
+    );
+    const IconUpload = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+      </svg>
+    );
+    const IconCheck = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={className}>
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    );
+    const IconCopy = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+      </svg>
+    );
+    const IconSliders = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" />
+        <line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" />
+        <line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
+        <line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" />
+      </svg>
+    );
+    const IconClock = ({ className = "w-5 h-5" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+      </svg>
+    );
+    const IconTag = ({ className = "w-5 h-5" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+        <line x1="7" y1="7" x2="7.01" y2="7" />
+      </svg>
+    );
+    const IconMapPin = ({ className = "w-5 h-5" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+      </svg>
+    );
+    const IconLock = ({ className = "w-3 h-3" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      </svg>
+    );
+    const IconUnlock = ({ className = "w-3 h-3" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 9.9-1" />
+      </svg>
+    );
+    const IconPlus = ({ className = "w-3.5 h-3.5" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={className}>
+        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+    );
+    const IconSave = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+        <polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
+      </svg>
+    );
+    const IconCode = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+        <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+      </svg>
+    );
+
+    // ========================================================================
+    // DICCIONARI MULTILINGÜE (CATALÀ PRIMER, CASTELLÀ, ANGLÈS, FRANCÈS)
+    // ========================================================================
+    const LANGUAGES = [
+      { code: 'ca', label: 'CA', full: 'Català' },
+      { code: 'es', label: 'ES', full: 'Español' },
+      { code: 'en', label: 'EN', full: 'English' },
+      { code: 'fr', label: 'FR', full: 'Français' }
+    ];
+
+    const UI_TEXT = {
+      ca: {
+        heroHeadline: 'HISTÒRIES AMB ÀNIMA',
+        scrollCue: 'DESPLAÇA',
+        navProjects: 'PROJECTES',
+        navAbout: 'NOSALTRES',
+        sectionProjects: '01 // PROJECTES SELECCIONATS',
+        filmsCount: 'FILMS',
+        watchBtn: 'VEURE',
+        loopBadge: 'LOOP',
+        sectionAbout: '02 // SOBRE NOSALTRES',
+        aboutBadge: 'VENTURA FILMS • ANDORRA',
+        aboutQuotePart1: 'ENS ENCANTA CONSUMIR HISTÒRIES',
+        aboutQuotePart2: 'A FOC LENT.',
+        coFounders: 'MARC MARTOS & JORDI RIBERAYGUA — COFUNDADORS',
+        aboutBio: 'Direcció, cinematografia i narrativa visual construïdes des de la paciència, el caràcter i l’honestedat.',
+        footerOverline1: 'INICIA UNA PRODUCCIÓ',
+        footerOverline2: 'CONNEXIÓ DIRECTA',
+        footerHeadline: 'EXPLIQUEM LA PROPERA GRAN HISTÒRIA.',
+        copyEmail: 'COPIAR CORREU',
+        copiedEmail: 'COPIAT AL PORTAPAPERS',
+        modalProject: 'PROJECTE',
+        modalClose: 'TANCAR',
+        modalDuration: 'DURADA',
+        modalType: 'TIPUS',
+        modalLocation: 'LOCALITZACIÓ',
+        modalSynopsis: 'SINOPSI I NOTES DE PRODUCCIÓ'
+      },
+      es: {
+        heroHeadline: 'HISTORIAS CON ALMA',
+        scrollCue: 'DESPLAZA',
+        navProjects: 'PROYECTOS',
+        navAbout: 'NOSOTROS',
+        sectionProjects: '01 // TRABAJOS SELECCIONADOS',
+        filmsCount: 'FILMS',
+        watchBtn: 'VER',
+        loopBadge: 'LOOP',
+        sectionAbout: '02 // SOBRE NOSOTROS',
+        aboutBadge: 'VENTURA FILMS • ANDORRA',
+        aboutQuotePart1: 'NOS ENCANTA CONSUMIR HISTORIAS',
+        aboutQuotePart2: 'A FUEGO LENTO.',
+        coFounders: 'MARC MARTOS & JORDI RIBERAYGUA — COFUNDADORES',
+        aboutBio: 'Dirección, cinematografía y oficio narrativo construidos con paciencia, carácter y honestidad visual.',
+        footerOverline1: 'INICIA UNA PRODUCCIÓN',
+        footerOverline2: 'CONEXIÓN DIRECTA',
+        footerHeadline: 'CONTEMOS LA PRÓXIMA GRAN HISTORIA.',
+        copyEmail: 'COPIAR EMAIL',
+        copiedEmail: 'COPIADO AL PORTAPAPELES',
+        modalProject: 'PROYECTO',
+        modalClose: 'CERRAR',
+        modalDuration: 'DURACIÓN',
+        modalType: 'TIPO',
+        modalLocation: 'UBICACIÓN',
+        modalSynopsis: 'SINOPSIS Y NOTAS DE PRODUCCIÓN'
+      },
+      en: {
+        heroHeadline: 'STORIES WITH SOUL',
+        scrollCue: 'SCROLL',
+        navProjects: 'PROJECTS',
+        navAbout: 'ABOUT',
+        sectionProjects: '01 // SELECTED WORKS',
+        filmsCount: 'FILMS',
+        watchBtn: 'WATCH',
+        loopBadge: 'LOOP',
+        sectionAbout: '02 // ABOUT US',
+        aboutBadge: 'VENTURA FILMS • ANDORRA',
+        aboutQuotePart1: 'WE LOVE SAVORING STORIES',
+        aboutQuotePart2: 'ON A SLOW BURN.',
+        coFounders: 'MARC MARTOS & JORDI RIBERAYGUA — CO-FOUNDERS',
+        aboutBio: 'Direction, cinematography, and narrative craft built on patience, character, and visual honesty.',
+        footerOverline1: 'INITIATE A PRODUCTION',
+        footerOverline2: 'DIRECT CONNECTION',
+        footerHeadline: 'LET’S TELL THE NEXT GREAT STORY.',
+        copyEmail: 'COPY EMAIL',
+        copiedEmail: 'COPIED TO CLIPBOARD',
+        modalProject: 'PROJECT',
+        modalClose: 'CLOSE',
+        modalDuration: 'DURATION',
+        modalType: 'TYPE',
+        modalLocation: 'LOCATION',
+        modalSynopsis: 'SYNOPSIS & PRODUCTION NOTES'
+      },
+      fr: {
+        heroHeadline: 'DES HISTOIRES AVEC UNE ÂME',
+        scrollCue: 'DÉFILER',
+        navProjects: 'PROJETS',
+        navAbout: 'À PROPOS',
+        sectionProjects: '01 // ŒUVRES SÉLECTIONNÉES',
+        filmsCount: 'FILMS',
+        watchBtn: 'VOIR',
+        loopBadge: 'BOUCLE',
+        sectionAbout: '02 // À PROPOS DE NOUS',
+        aboutBadge: 'VENTURA FILMS • ANDORRA',
+        aboutQuotePart1: 'NOUS AIMONS SAVOURER DES HISTOIRES',
+        aboutQuotePart2: 'À FEU DOUX.',
+        coFounders: 'MARC MARTOS & JORDI RIBERAYGUA — COFONDATEURS',
+        aboutBio: 'Réalisation, cinématographie et narration visuelle bâties sur la patience, le caractère et l’authenticité.',
+        footerOverline1: 'LANCER UNE PRODUCTION',
+        footerOverline2: 'CONNEXION DIRECTE',
+        footerHeadline: 'RACONTONS LA PROCHAINE GRANDE HISTOIRE.',
+        copyEmail: 'COPIER L’EMAIL',
+        copiedEmail: 'COPIÉ DANS LE PRESSE-PAPIERS',
+        modalProject: 'PROJET',
+        modalClose: 'FERMER',
+        modalDuration: 'DURÉE',
+        modalType: 'CATÉGORIE',
+        modalLocation: 'LIEU',
+        modalSynopsis: 'SYNOPSIS & NOTES DE PRODUCTION'
+      }
+    };
+
+    // ========================================================================
+    // VECTORS OFICIALS DEL MANUAL DE MARCA VENTURA (PÀGINES 3–7 I 54)
+    // ========================================================================
+    const VenturaIsotipo = ({ className = "w-10 h-10", color = "#FCF0D6" }) => (
+      <svg viewBox="0 0 120 120" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Mà superior esquerra (franges amb contorn) */}
+        <polygon points="35,6 57,6 60.5,13.5 38.5,13.5" stroke={color} strokeWidth="2.6" />
+        <polygon points="29,17 59,17 62.5,24.5 32.5,24.5" stroke={color} strokeWidth="2.6" />
+        <polygon points="23,28 62,28 65.5,35.5 26.5,35.5" stroke={color} strokeWidth="2.6" />
+        <polygon points="16,39 95,39 98.5,46.5 19.5,46.5" stroke={color} strokeWidth="2.6" />
+        <polygon points="21,50 37,50 40.5,57.5 24.5,57.5" stroke={color} strokeWidth="2.6" />
+        <polygon points="26,61 39,61 42.5,68.5 29.5,68.5" stroke={color} strokeWidth="2.6" />
+        {/* Mà inferior dreta (franges plenes) */}
+        <polygon points="88,50 98.5,50 102,57.5 88,57.5" fill={color} />
+        <polygon points="88,61 103.5,61 107,68.5 88,68.5" fill={color} />
+        <polygon points="31,72 108.5,72 112,79.5 34.5,79.5" fill={color} />
+        <polygon points="67,83 105,83 108.5,90.5 70.5,90.5" fill={color} />
+        <polygon points="72,94 100,94 103.5,101.5 75.5,101.5" fill={color} />
+        <polygon points="77,105 95,105 98.5,112.5 80.5,112.5" fill={color} />
+      </svg>
+    );
+
+    const ItsAWrapSeal = ({ className = "w-28 h-28", color = "#FCF0D6", spin = true }) => (
+      <div className={`relative inline-flex items-center justify-center select-none ${className}`}>
+        <svg
+          viewBox="0 0 120 120"
+          className={`w-full h-full ${spin ? 'animate-[spin_24s_linear_infinite]' : ''}`}
+        >
+          <circle cx="60" cy="60" r="56" fill="none" stroke={color} strokeWidth="2.5" />
+          <circle cx="60" cy="60" r="35" fill="none" stroke={color} strokeWidth="2.2" />
+          <defs>
+            <path
+              id="venturaWrapCircle"
+              d="M 60, 60 m -44, 0 a 44,44 0 1,1 88,0 a 44,44 0 1,1 -88,0"
+            />
+          </defs>
+          <text
+            fill={color}
+            fontSize="11.5"
+            fontWeight="800"
+            letterSpacing="2.6px"
+            className="font-field-bold uppercase"
+          >
+            <textPath href="#venturaWrapCircle" startOffset="2%">
+              IT’S A WRAP • IT’S A WRAP •
+            </textPath>
+          </text>
+        </svg>
+        <span
+          style={{ color }}
+          className="absolute font-nicholas text-4xl sm:text-5xl leading-none pt-1"
+        >
+          V
+        </span>
+      </div>
+    );
+
+    // ========================================================================
+    // ELS 7 PROJECTES REALS DE VENTURA FILMS (AMB SUPORT CA / ES / EN / FR)
+    // ========================================================================
+    const INITIAL_PROJECTS = [
+      {
+        id: 'wagic',
+        index: '01',
+        title: 'WAGIC.',
+        duration: '08:15',
+        location: 'Mediterrani / Offshore',
+        year: '2024',
+        videoPreview: 'https://assets.mixkit.co/videos/preview/mixkit-underwater-view-of-a-coral-reef-41524-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1400&q=85',
+        embedUrl: 'https://player.vimeo.com/video/375468729?autoplay=1&title=0&byline=0&portrait=0',
+        credits: 'Produït per Ventura Films',
+        awards: 'Selecció Oficial • Documental Subaquàtic',
+        i18n: {
+          ca: {
+            type: 'DOCUMENTAL SUBAQUÀTIC',
+            shortDesc: 'Exploració visual i documental sota la superfície marina.',
+            description: 'Un viatge immersiu a les profunditats marines que documenta el silenci, l’arquitectura submergida i la fragilitat dels ecosistemes oceànics amb llum natural.'
+          },
+          es: {
+            type: 'DOCUMENTAL SUBACUÁTICO',
+            shortDesc: 'Exploración visual y documental bajo la superficie marina.',
+            description: 'Un viaje inmersivo a las profundidades marinas que documenta el silencio, la arquitectura sumergida y la fragilidad de los ecosistemas oceánicos con luz natural.'
+          },
+          en: {
+            type: 'SUBAQUATIC DOCUMENTARY',
+            shortDesc: 'Visual and documentary exploration beneath the ocean surface.',
+            description: 'An immersive journey into the marine depths documenting silence, submerged structures, and the fragility of ocean ecosystems captured with ambient light.'
+          },
+          fr: {
+            type: 'DOCUMENTAIRE SOUS-MARIN',
+            shortDesc: 'Exploration visuelle et documentaire sous la surface marine.',
+            description: 'Un voyage immersif dans les profondeurs marines documentant le silence, les structures immergées et la fragilité des écosystèmes océaniques.'
+          }
+        }
+      },
+      {
+        id: 'la-matanca-del-porc',
+        index: '02',
+        title: 'LA MATANÇA DEL PORC',
+        duration: '15:30',
+        location: 'Andorra',
+        year: '2024',
+        videoPreview: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-mountain-range-covered-in-snow-41467-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1400&q=85',
+        embedUrl: 'https://player.vimeo.com/video/824804225?autoplay=1&title=0&byline=0&portrait=0',
+        credits: 'Una mirada al passat • Produït per Ventura Films',
+        awards: 'Documental de Patrimoni i Memòria Històrica',
+        i18n: {
+          ca: {
+            type: 'DOCUMENTAL ETNOGRÀFIC',
+            shortDesc: 'Una mirada al passat i a les tradicions d’alta muntanya.',
+            description: 'Una mirada al passat. Un retrat íntim en blanc i negre i color sobre un dels rituals comunitaris més antics dels Pirineus andorrans, preservant la memòria oral de les valls.'
+          },
+          es: {
+            type: 'DOCUMENTAL ETNOGRÁFICO',
+            shortDesc: 'Una mirada al pasado y a las tradiciones de alta montaña.',
+            description: 'Una mirada al pasado. Un retrato íntimo sobre uno de los rituales comunitarios más antiguos de los Pirineos andorranos, preservando la memoria oral de los valles.'
+          },
+          en: {
+            type: 'HERITAGE DOCUMENTARY',
+            shortDesc: 'A look into the past and high-mountain ancestral traditions.',
+            description: 'Una mirada al passat. An intimate portrait of one of the oldest communal winter traditions in the Andorran Pyrenees, preserving the oral memory of the valleys.'
+          },
+          fr: {
+            type: 'DOCUMENTAIRE PATRIMOINE',
+            shortDesc: 'Un regard sur le passé et les traditions de haute montagne.',
+            description: 'Una mirada al passat. Un portrait intime de l’un des plus anciens rituels communautaires des Pyrénées andorranes, préservant la mémoire orale des vallées.'
+          }
+        }
+      },
+      {
+        id: 'digicom',
+        index: '03',
+        title: 'DIGICOM',
+        duration: '01:45',
+        location: 'Andorra',
+        year: '2024',
+        videoPreview: 'https://assets.mixkit.co/videos/preview/mixkit-woman-dancing-in-a-parking-lot-at-night-41744-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1508997449629-303059a039c0?auto=format&fit=crop&w=1400&q=85',
+        embedUrl: 'https://player.vimeo.com/video/76979871?autoplay=1&title=0&byline=0&portrait=0',
+        credits: 'Client: Digicom • Solucions pel dia a dia • Ventura Films',
+        awards: 'Campanya Comercial & Brand Film',
+        i18n: {
+          ca: {
+            type: 'COMERCIAL / BRAND FILM',
+            shortDesc: 'Solucions pel dia a dia amb narrativa cinematogràfica.',
+            description: 'Solucions pel dia a dia. Peça publicitària rodada amb òptiques de cinema que transforma situacions quotidianes d’estrès tecnològic en una narrativa visual càlida i propera.'
+          },
+          es: {
+            type: 'COMERCIAL / BRAND FILM',
+            shortDesc: 'Soluciones para el día a día con narrativa cinematográfica.',
+            description: 'Solucions pel dia a dia. Pieza publicitaria rodada con estética cinematográfica que transforma situaciones cotidianas en una narrativa visual cálida y humana.'
+          },
+          en: {
+            type: 'COMMERCIAL / BRAND FILM',
+            shortDesc: 'Everyday solutions told through cinematic direction.',
+            description: 'Solucions pel dia a dia. A narrative commercial campaign shot with cinema optics that turns everyday technological friction into a warm, human visual story.'
+          },
+          fr: {
+            type: 'PUBLICITÉ / BRAND FILM',
+            shortDesc: 'Des solutions au quotidien avec une narration cinématographique.',
+            description: 'Solucions pel dia a dia. Film publicitaire tourné avec une esthétique cinéma transformant le quotidien en une narration visuelle chaleureuse.'
+          }
+        }
+      },
+      {
+        id: 'temporada-baixa',
+        index: '04',
+        title: 'TEMPORADA BAIXA',
+        duration: '12:10',
+        location: 'Andorra',
+        year: '2024',
+        videoPreview: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-snowy-mountain-peaks-41465-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1400&q=85',
+        embedUrl: 'https://player.vimeo.com/video/259411563?autoplay=1&title=0&byline=0&portrait=0',
+        credits: 'Un curtmetratge de Marc Martos • Amb Toni Zamora, Boris Chrestia i Jan Visent',
+        awards: 'Curtmetratge de Ficció • Ventura Films',
+        i18n: {
+          ca: {
+            type: 'CURTMETRATGE DE FICCIÓ',
+            shortDesc: 'Un curtmetratge de Marc Martos • Toni Zamora, Boris Chrestia, Jan Visent.',
+            description: 'Un curtmetratge de Marc Martos protagonitzat per Toni Zamora, Boris Chrestia i Jan Visent. Quan el turisme marxa i els boscos queden en silenci, afloren les tensions ocultes.'
+          },
+          es: {
+            type: 'CORTOMETRAJE DE FICCIÓN',
+            shortDesc: 'Un cortometraje de Marc Martos • Toni Zamora, Boris Chrestia, Jan Visent.',
+            description: 'Un cortometraje de Marc Martos protagonizado por Toni Zamora, Boris Chrestia y Jan Visent. Cuando el turismo desaparece y el bosque queda en silencio, afloran las tensiones.'
+          },
+          en: {
+            type: 'FICTION SHORT FILM',
+            shortDesc: 'A short film by Marc Martos • Toni Zamora, Boris Chrestia, Jan Visent.',
+            description: 'A narrative short film directed by Marc Martos starring Toni Zamora, Boris Chrestia, and Jan Visent. Set in the quiet off-season of the mountain woods where hidden tensions surface.'
+          },
+          fr: {
+            type: 'COURT-MÉTRAGE DE FICTION',
+            shortDesc: 'Un court-métrage de Marc Martos • Toni Zamora, Boris Chrestia, Jan Visent.',
+            description: 'Un court-métrage réalisé par Marc Martos avec Toni Zamora, Boris Chrestia et Jan Visent, plongé dans le silence tendu de la basse saison en montagne.'
+          }
+        }
+      },
+      {
+        id: 'la-muerte-anunciada-de-un-villano',
+        index: '05',
+        title: 'LA MUERTE ANUNCIADA DE UN VILLANO',
+        duration: '14:00',
+        location: 'Andorra / Espanya',
+        year: '2024',
+        videoPreview: 'https://assets.mixkit.co/videos/preview/mixkit-woman-dancing-in-a-parking-lot-at-night-41744-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?auto=format&fit=crop&w=1400&q=85',
+        embedUrl: 'https://player.vimeo.com/video/76979871?autoplay=1&title=0&byline=0&portrait=0',
+        credits: 'Un cortometraje de Marc Martos • Con la participación de Sergio Zamora • Ventura Films',
+        awards: 'Selecció Oficial • Ficció Narrativa',
+        i18n: {
+          ca: {
+            type: 'CURTMETRATGE DE FICCIÓ',
+            shortDesc: 'Un curtmetratge de Marc Martos • Amb la participació de Sergio Zamora.',
+            description: 'Un curtmetratge de Marc Martos amb la participació especial de Sergio Zamora. Una exploració psicològica i cinematogràfica sobre la figura de l’antagonista i el seu destí inevitable.'
+          },
+          es: {
+            type: 'CORTOMETRAJE DE FICCIÓN',
+            shortDesc: 'Un cortometraje de Marc Martos • Con la participación de Sergio Zamora.',
+            description: 'Un cortometraje de Marc Martos con la participación de Sergio Zamora. Una exploración psicológica y cinematográfica sobre la construcción del antagonista y su destino.'
+          },
+          en: {
+            type: 'FICTION SHORT FILM',
+            shortDesc: 'A short film by Marc Martos • Featuring Sergio Zamora.',
+            description: 'A short film directed by Marc Martos featuring Sergio Zamora. A psychological and richly lensed character study deconstructing the anatomy and fate of a villain.'
+          },
+          fr: {
+            type: 'COURT-MÉTRAGE DE FICTION',
+            shortDesc: 'Un court-métrage de Marc Martos • Avec la participation de Sergio Zamora.',
+            description: 'Un court-métrage de Marc Martos avec Sergio Zamora. Une étude psychologique et cinématographique sur la figure de l’antagoniste et son destin.'
+          }
+        }
+      },
+      {
+        id: 'breathe',
+        index: '06',
+        title: 'BREATHE',
+        duration: '09:40',
+        location: 'Mar Mediterrani',
+        year: '2024',
+        videoPreview: 'https://assets.mixkit.co/videos/preview/mixkit-sea-waves-splashing-on-the-shore-1102-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1682687220063-4742bd7fd538?auto=format&fit=crop&w=1400&q=85',
+        embedUrl: 'https://player.vimeo.com/video/375468729?autoplay=1&title=0&byline=0&portrait=0',
+        credits: 'Un film de Jordi Riberaygua • ESCAC Films & Ventura Films',
+        awards: 'Documental Marí i Subaquàtic',
+        i18n: {
+          ca: {
+            type: 'DOCUMENTAL & MARÍ',
+            shortDesc: 'Un film de Jordi Riberaygua sobre la respiració i l’abisme marí.',
+            description: 'Un film de Jordi Riberaygua coproduït amb ESCAC Films i Ventura. Una immersió sensorial en l’apnea i el busseig nocturn on cada respiració marca la frontera entre dos mons.'
+          },
+          es: {
+            type: 'DOCUMENTAL & MARINO',
+            shortDesc: 'Un film de Jordi Riberaygua sobre la respiración y el abismo marino.',
+            description: 'Un film de Jordi Riberaygua. Una inmersión sensorial en el buceo y el mundo subacuático donde cada respiración marca la frontera entre la superficie y el abismo.'
+          },
+          en: {
+            type: 'DOCUMENTARY & MARINE',
+            shortDesc: 'A film by Jordi Riberaygua on breath and the deep ocean.',
+            description: 'A film by Jordi Riberaygua. A sensory subaquatic documentary exploring night diving and human connection with the sea, where every breath bridges two worlds.'
+          },
+          fr: {
+            type: 'DOCUMENTAIRE & MARIN',
+            shortDesc: 'Un film de Jordi Riberaygua sur le souffle et les profondeurs.',
+            description: 'Un film de Jordi Riberaygua. Une immersion sensorielle sous-marine où chaque respiration marque la frontière entre la surface et les profondeurs.'
+          }
+        }
+      },
+      {
+        id: 'mukhbe',
+        index: '07',
+        title: 'MUKHBE',
+        duration: '18:41',
+        location: 'Andorra - Geòrgia (16:9)',
+        year: '2024',
+        videoPreview: 'https://assets.mixkit.co/videos/preview/mixkit-skier-going-down-a-snowy-mountain-41468-large.mp4',
+        poster: 'https://images.unsplash.com/photo-1548777123-e216912df7d8?auto=format&fit=crop&w=1400&q=85',
+        embedUrl: 'https://player.vimeo.com/video/824804225?autoplay=1&title=0&byline=0&portrait=0',
+        credits: 'Codirigit per Àlex & Jordi Riberaygua • OSA Andorra & Ventura Films',
+        awards: "Finalista — 44th Paladino d'Oro Sport Film Festival (Palerm)",
+        i18n: {
+          ca: {
+            type: 'DOCUMENTAL & MUNTANYA',
+            shortDesc: 'Una història de neu al Caucas.',
+            description: 'Una història de neu al Caucas. Documental d’expedició de 18:41 minuts a les valls remotes de Svaneti (Geòrgia), combinant freeride d’alta muntanya i la cultura ancestral del Caucas.'
+          },
+          es: {
+            type: 'DOCUMENTAL & MONTAÑA',
+            shortDesc: 'Una historia de nieve en el Cáucaso.',
+            description: 'Una història de neu al Caucas. Documental de expedición de 18:41 minutos en los valles remotos de Svaneti (Georgia), combinando freeride de alta montaña y cultura ancestral.'
+          },
+          en: {
+            type: 'DOCUMENTARY & MOUNTAIN',
+            shortDesc: 'A snow story in the Georgian Caucasus.',
+            description: 'Una història de neu al Caucas. An 18:41 high-altitude freeride skiing and cultural documentary deep into the remote medieval tower villages and glaciers of Svaneti, Georgia.'
+          },
+          fr: {
+            type: 'DOCUMENTAIRE & MONTAGNE',
+            shortDesc: 'Une histoire de neige dans le Caucase.',
+            description: 'Una història de neu al Caucas. Documentaire d’expédition de 18:41 minutes au cœur des glaciers et villages médiévaux de Svanétie en Géorgie.'
+          }
+        }
+      }
+    ];
+
+    // Helper per convertir URLs de YouTube o Vimeo en URLs d'embed netes
+    function normalizeVideoEmbedUrl(url) {
+      if (!url) return '';
+      const trimmed = url.trim();
+      const ytMatch = trimmed.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch) {
+        return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0&modestbranding=1`;
+      }
+      const vimeoMatch = trimmed.match(/vimeo\.com\/(\d+)/);
+      if (vimeoMatch && !trimmed.includes('player.vimeo.com')) {
+        return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1&title=0&byline=0&portrait=0`;
+      }
+      return trimmed;
+    }
+
+    function getLocalizedProject(project, lang) {
+      const localized = project.i18n?.[lang] || project.i18n?.ca || {};
+      return {
+        type: localized.type || project.type || 'FILM',
+        shortDesc: localized.shortDesc || project.shortDesc || '',
+        description: localized.description || project.description || ''
+      };
+    }
+
+    function copyTextToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+      } catch (e) {}
+      document.body.removeChild(ta);
+    }
+
+    // ========================================================================
+    // TARGETA DE PROJECTE FIXA AMB VÍDEO EN LOOP (ESTIL MAMMA TEAM)
+    // ========================================================================
+    const FixedEditorialProjectCard = ({ project, lang, ui, onSelect }) => {
+      const videoRef = useRef(null);
+      const { type, shortDesc } = getLocalizedProject(project, lang);
+
+      useEffect(() => {
+        if (videoRef.current) {
+          videoRef.current.play().catch(() => {});
+        }
+      }, [project.videoPreview]);
+
+      return (
+        <article
+          onClick={() => onSelect(project)}
+          className="group relative flex flex-col bg-[#080808] border border-[#FCF0D6]/15 hover:border-[#B40023] active:border-[#B40023] rounded-[3px] p-3.5 sm:p-5 cursor-pointer select-none transition-all duration-300 hover:bg-[#0D0D0D] shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+        >
+          {/* Capçalera de la targeta: Categoria i Títol a sobre del vídeo */}
+          <div className="mb-3 pb-2.5 border-b border-[#FCF0D6]/10 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between font-field-medium text-[10px] tracking-[0.22em] uppercase text-[#FCF0D6]/60">
+              <div className="flex items-center gap-1.5 truncate pr-2">
+                <span className="text-[#B40023] font-field-bold shrink-0">[{project.index}]</span>
+                <span className="truncate">{type}</span>
+              </div>
+              <span className="text-[#FCF0D6]/50 group-hover:text-[#B40023] transition-colors flex items-center gap-1 shrink-0">
+                <span>{ui.watchBtn}</span>
+                <IconArrowUpRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </span>
+            </div>
+
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="font-field-bold text-lg sm:text-2xl text-[#FCF0D6] group-hover:text-white uppercase tracking-tight leading-tight line-clamp-1">
+                {project.title}
+              </h3>
+              <span className="font-field-medium text-[11px] tracking-[0.18em] text-[#FCF0D6]/50 shrink-0">
+                {project.duration}
+              </span>
+            </div>
+          </div>
+
+          {/* Vídeo en loop continu 16:10 */}
+          <div className="relative w-full aspect-[16/10] overflow-hidden rounded-[2px] bg-black mb-3 border border-white/5">
+            <video
+              ref={videoRef}
+              src={project.videoPreview}
+              poster={project.poster}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out filter brightness-90 contrast-110 group-hover:brightness-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 opacity-70 group-hover:opacity-40 transition-opacity duration-300" />
+
+            <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2 py-0.5 bg-black/70 backdrop-blur-md border border-white/10 rounded-[2px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#B40023] animate-pulse" />
+              <span className="font-field-medium text-[8px] tracking-[0.24em] uppercase text-[#FCF0D6]/90">
+                {ui.loopBadge}
+              </span>
+            </div>
+
+            <div className="absolute bottom-2.5 right-2.5 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/75 backdrop-blur-md border border-[#FCF0D6]/30 flex items-center justify-center group-hover:bg-[#B40023] group-hover:border-[#B40023] transition-all duration-300">
+              <IconPlay className="w-3.5 h-3.5 text-[#FCF0D6] ml-0.5" />
+            </div>
+          </div>
+
+          {/* Descripció mínima i localització/any */}
+          <div className="mt-auto space-y-2">
+            <p className="font-field-regular text-xs sm:text-[13px] text-[#FCF0D6]/75 line-clamp-1 leading-relaxed">
+              {shortDesc}
+            </p>
+            <div className="pt-2 border-t border-[#FCF0D6]/10 flex items-center justify-between font-field-medium text-[10px] tracking-[0.18em] uppercase text-[#FCF0D6]/45">
+              <span className="truncate pr-2">{project.location}</span>
+              <span className="shrink-0">{project.year}</span>
+            </div>
+          </div>
+        </article>
+      );
+    };
+
+    // ========================================================================
+    // APLICACIÓ PRINCIPAL VENTURA FILMS
+    // ========================================================================
+    function App() {
+      const [lang, setLang] = useState('ca');
+      const ui = UI_TEXT[lang] || UI_TEXT.ca;
+
+      const [projects, setProjects] = useState(() => {
+        try {
+          const saved = localStorage.getItem('ventura_cms_projects_v1');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          }
+        } catch (e) {}
+        return INITIAL_PROJECTS;
+      });
+
+      const [heroVideoUrl, setHeroVideoUrl] = useState(() => {
+        return localStorage.getItem('ventura_cms_hero_v1') ||
+          'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-mountain-range-covered-in-snow-41467-large.mp4';
+      });
+
+      const [aboutPhotoUrl, setAboutPhotoUrl] = useState(() => {
+        return localStorage.getItem('ventura_cms_about_photo_v1') ||
+          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2200&q=90';
+      });
+
+      const [activeProject, setActiveProject] = useState(null);
+      const [isHeroMuted, setIsHeroMuted] = useState(true);
+      const [isNavDocked, setIsNavDocked] = useState(false);
+      const [emailCopied, setEmailCopied] = useState(false);
+
+      // Estat del CMS Privat del Director (ocult per als visitants)
+      const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+      const [showPinPrompt, setShowPinPrompt] = useState(false);
+      const [pinInput, setPinInput] = useState('');
+      const [pinError, setPinError] = useState(false);
+      const [isStudioDrawerOpen, setIsStudioDrawerOpen] = useState(false);
+      const [adminTab, setAdminTab] = useState('projects');
+      const [editingProjectId, setEditingProjectId] = useState(INITIAL_PROJECTS[0].id);
+      const [saveStatus, setSaveStatus] = useState('');
+      const [exportedCopied, setExportedCopied] = useState(false);
+
+      const [loadedFontsStatus, setLoadedFontsStatus] = useState({
+        nicholas: false,
+        fieldGothic: false
+      });
+
+      const heroVideoRef = useRef(null);
+
+      // Drecera secreta Shift + D o #admin a la URL per obrir el CMS del Director
+      useEffect(() => {
+        const checkHash = () => {
+          if (window.location.hash === '#admin' || window.location.search.includes('admin=1')) {
+            setShowPinPrompt(true);
+          }
+        };
+        checkHash();
+        window.addEventListener('hashchange', checkHash);
+
+        const handleKeyDown = (e) => {
+          const tag = document.activeElement?.tagName?.toLowerCase();
+          if (tag !== 'input' && tag !== 'textarea' && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+            e.preventDefault();
+            if (isAdminUnlocked) {
+              setIsStudioDrawerOpen((prev) => !prev);
+            } else {
+              setShowPinPrompt(true);
+            }
+          }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+          window.removeEventListener('hashchange', checkHash);
+          window.removeEventListener('keydown', handleKeyDown);
+        };
+      }, [isAdminUnlocked]);
+
+      // Desa els canvis al navegador i prepara l'exportació per a Vercel
+      const saveChanges = (updatedProjects = projects, updatedHero = heroVideoUrl, updatedPhoto = aboutPhotoUrl) => {
+        setSaveStatus('DESANT...');
+        try {
+          localStorage.setItem('ventura_cms_projects_v1', JSON.stringify(updatedProjects));
+          localStorage.setItem('ventura_cms_hero_v1', updatedHero);
+          localStorage.setItem('ventura_cms_about_photo_v1', updatedPhoto);
+          setSaveStatus('DESAT CORRECTAMENT ✓');
+        } catch (e) {
+          setSaveStatus('DESAT A LA SESSIÓ ✓');
+        }
+        setTimeout(() => setSaveStatus(''), 3000);
+      };
+
+      // Control del scroll per ancorar la barra blanca esmerilada a dalt
+      useEffect(() => {
+        const handleScroll = () => {
+          const dockThreshold = window.innerHeight - 84;
+          setIsNavDocked(window.scrollY >= dockThreshold);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
+
+      // Bloqueja l'scroll quan s'obre el reproductor d'un projecte
+      useEffect(() => {
+        document.body.style.overflow = activeProject ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+      }, [activeProject]);
+
+      // Carregador en viu dels arxius .TTF des del teu Mac
+      const handleFontFileUpload = async (e, fontTarget) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+          const buffer = await file.arrayBuffer();
+          const familyName = fontTarget === 'nicholas' ? 'NicholasCustom' : 'FieldGothicCustom';
+          const fontFace = new FontFace(familyName, buffer);
+          const loadedFace = await fontFace.load();
+          document.fonts.add(loadedFace);
+          setLoadedFontsStatus((prev) => ({ ...prev, [fontTarget]: file.name }));
+        } catch (err) {
+          console.error('Error carregant la font TTF:', err);
+        }
+      };
+
+      // Pujada de la foto en Blanc i Negre d'en Marc i en Jordi
+      const handleAboutPhotoUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxW = 1600;
+            const scale = img.width > maxW ? maxW / img.width : 1;
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+            setAboutPhotoUrl(compressedDataUrl);
+            saveChanges(projects, heroVideoUrl, compressedDataUrl);
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const scrollToTop = (e) => {
+        if (e) e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const scrollToSection = (e, id) => {
+        if (e) e.preventDefault();
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+
+      const handleCopyEmail = () => {
+        copyTextToClipboard('films@ventura.ad');
+        setEmailCopied(true);
+        setTimeout(() => setEmailCopied(false), 2500);
+      };
+
+      const handleVerifyPin = (e) => {
+        e.preventDefault();
+        const clean = pinInput.trim().toLowerCase();
+        if (clean === 'ventura' || clean === '833866') {
+          setIsAdminUnlocked(true);
+          setShowPinPrompt(false);
+          setIsStudioDrawerOpen(true);
+          setPinInput('');
+          setPinError(false);
+        } else {
+          setPinError(true);
+        }
+      };
+
+      const handleAdminProjectChange = (field, value, i18nLang = null) => {
+        const updated = projects.map((proj) => {
+          if (proj.id !== editingProjectId) return proj;
+          if (i18nLang) {
+            return {
+              ...proj,
+              i18n: {
+                ...proj.i18n,
+                [i18nLang]: {
+                  ...(proj.i18n?.[i18nLang] || {}),
+                  [field]: value
+                }
+              }
+            };
+          }
+          const finalValue = field === 'embedUrl' ? normalizeVideoEmbedUrl(value) : value;
+          return { ...proj, [field]: finalValue };
+        });
+        setProjects(updated);
+        if (activeProject && activeProject.id === editingProjectId) {
+          const refreshed = updated.find((p) => p.id === editingProjectId);
+          if (refreshed) setActiveProject(refreshed);
+        }
+      };
+
+      const handleAddNewProject = () => {
+        const nextIdx = String(projects.length + 1).padStart(2, '0');
+        const newId = `project-${Date.now()}`;
+        const newProj = {
+          id: newId,
+          index: nextIdx,
+          title: 'NOU PROJECTE',
+          duration: '05:00',
+          location: 'Andorra',
+          year: String(new Date().getFullYear()),
+          videoPreview: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-mountain-range-covered-in-snow-41467-large.mp4',
+          poster: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1400&q=85',
+          embedUrl: 'https://player.vimeo.com/video/824804225?autoplay=1&title=0&byline=0&portrait=0',
+          credits: 'Produït per Ventura Films',
+          awards: 'Selecció Oficial',
+          i18n: {
+            ca: { type: 'DOCUMENTAL', shortDesc: 'Descripció breu del projecte.', description: 'Sinopsi completa del projecte.' },
+            es: { type: 'DOCUMENTAL', shortDesc: 'Descripción breve del proyecto.', description: 'Sinopsis completa del proyecto.' },
+            en: { type: 'DOCUMENTARY', shortDesc: 'Short project description.', description: 'Full project synopsis.' },
+            fr: { type: 'DOCUMENTAIRE', shortDesc: 'Courte description du projet.', description: 'Synopsis complet du projet.' }
+          }
+        };
+        const updated = [...projects, newProj];
+        setProjects(updated);
+        setEditingProjectId(newId);
+        saveChanges(updated, heroVideoUrl, aboutPhotoUrl);
+      };
+
+      const currentEditingProject = projects.find((p) => p.id === editingProjectId) || projects[0];
+
+      return (
+        <div className="min-h-screen bg-[#000000] text-[#FCF0D6] relative">
+          {/* Classes tipogràfiques dinàmiques que activen Nicholas.ttf i FieldGothicWide.ttf */}
+          <style dangerouslySetInnerHTML={{ __html: `
+            .font-nicholas {
+              font-family: ${loadedFontsStatus.nicholas ? "'NicholasCustom'," : ""} 'Nicholas', 'Fraunces', Georgia, serif;
+              font-weight: 900;
+              letter-spacing: -0.035em;
+            }
+            .font-field-bold {
+              font-family: ${loadedFontsStatus.fieldGothic ? "'FieldGothicCustom'," : ""} 'Field Gothic Wide', 'Archivo Black', 'Syne', sans-serif;
+              font-weight: 800;
+              letter-spacing: -0.015em;
+            }
+            .font-field-medium {
+              font-family: ${loadedFontsStatus.fieldGothic ? "'FieldGothicCustom'," : ""} 'Field Gothic Wide', 'Barlow Condensed', sans-serif;
+              font-weight: 600;
+            }
+            .font-field-regular {
+              font-family: ${loadedFontsStatus.fieldGothic ? "'FieldGothicCustom'," : ""} 'Field Gothic Wide', 'Barlow Condensed', system-ui, sans-serif;
+              font-weight: 400;
+            }
+          `}} />
+
+          {/* Textura analògica 35mm */}
+          <div className="ventura-film-grain" />
+
+          {/* ================================================================
+              1. HERO SECTION (VÍDEO A PANTALLA COMPLETA I TÍTOL REDUÏT A DALT)
+          ================================================================ */}
+          <section className="relative w-full h-[calc(100dvh-4.5rem)] sm:h-[calc(100dvh-5rem)] min-h-[460px] overflow-hidden bg-black select-none">
+            <video
+              ref={heroVideoRef}
+              key={heroVideoUrl}
+              src={heroVideoUrl}
+              poster="https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=2400&q=90"
+              autoPlay
+              loop
+              muted={isHeroMuted}
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover object-center scale-[1.01] filter brightness-[0.88] contrast-[1.1]"
+            />
+
+            <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-black/45 pointer-events-none" />
+
+            {/* Títol reduït a la part superior perquè el vídeo tingui tot el protagonisme */}
+            <div className="absolute top-6 sm:top-9 left-0 right-0 z-10 px-16 sm:px-24 text-center pointer-events-none">
+              <h1 className="font-field-bold text-xs sm:text-base md:text-lg text-[#FCF0D6] uppercase tracking-[0.28em] sm:tracking-[0.35em] drop-shadow-[0_4px_20px_rgba(0,0,0,0.85)]">
+                {ui.heroHeadline}
+              </h1>
+            </div>
+
+            {/* Botó de so discret */}
+            <div className="absolute top-5 right-5 sm:top-7 sm:right-10 z-20">
+              <button
+                onClick={() => setIsHeroMuted(!isHeroMuted)}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-[#B40023] backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all duration-300"
+                title={isHeroMuted ? 'Activar àudio' : 'Silenciar àudio'}
+              >
+                {isHeroMuted ? <IconVolumeX className="w-4 h-4" /> : <IconVolume2 className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Indicador subtil de desplaçament */}
+            <div className="absolute bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 opacity-75">
+              <span className="font-field-medium text-[9px] sm:text-[10px] tracking-[0.3em] uppercase text-[#FCF0D6]">
+                {ui.scrollCue}
+              </span>
+              <div className="w-[1px] h-4 sm:h-5 bg-gradient-to-b from-[#FCF0D6] to-transparent" />
+            </div>
+          </section>
+
+          {/* ================================================================
+              2. BARRA BLANCA ESMERILADA FLUIDA (DE BAIX CAP A DALT FIXA)
+          ================================================================ */}
+          <header
+            className={`sticky top-0 z-50 h-[4.5rem] sm:h-20 w-full transition-all duration-500 ${
+              isNavDocked
+                ? 'bg-white/90 backdrop-blur-2xl border-b border-black/10 shadow-[0_15px_50px_rgba(0,0,0,0.45)]'
+                : 'bg-white/80 backdrop-blur-xl border-t border-white/40'
+            }`}
+          >
+            <div className="max-w-[1600px] mx-auto h-full px-3.5 sm:px-10 lg:px-12 flex items-center justify-between gap-2">
+              <a
+                href="#top"
+                onClick={scrollToTop}
+                className="group flex items-center gap-2 sm:gap-3.5 focus:outline-none shrink-0"
+              >
+                <VenturaIsotipo
+                  className="w-6 h-6 sm:w-9 sm:h-9 transition-transform duration-500 group-hover:scale-105"
+                  color="#B40023"
+                />
+                <span className="font-nicholas text-2xl sm:text-4xl text-[#B40023] tracking-tight leading-none">
+                  Ventura
+                </span>
+              </a>
+
+              <div className="flex items-center gap-3 sm:gap-8 md:gap-12">
+                <nav className="flex items-center gap-3.5 sm:gap-10">
+                  <a
+                    href="#projects"
+                    onClick={(e) => scrollToSection(e, 'projects')}
+                    className="relative group py-1 font-field-bold text-[10px] sm:text-sm tracking-[0.16em] sm:tracking-[0.22em] uppercase text-black hover:text-[#B40023] transition-colors"
+                  >
+                    <span>{ui.navProjects}</span>
+                    <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#B40023] group-hover:w-full transition-all duration-300" />
+                  </a>
+
+                  <a
+                    href="#about"
+                    onClick={(e) => scrollToSection(e, 'about')}
+                    className="relative group py-1 font-field-bold text-[10px] sm:text-sm tracking-[0.16em] sm:tracking-[0.22em] uppercase text-black hover:text-[#B40023] transition-colors"
+                  >
+                    <span>{ui.navAbout}</span>
+                    <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#B40023] group-hover:w-full transition-all duration-300" />
+                  </a>
+                </nav>
+
+                <div className="h-4 w-[1px] bg-black/20" />
+
+                {/* Selector d'idioma: CA (per defecte), ES, EN, FR */}
+                <div className="flex items-center bg-black/[0.07] p-0.5 sm:p-1 rounded-[3px] border border-black/10">
+                  {LANGUAGES.map((item) => {
+                    const isActive = lang === item.code;
+                    return (
+                      <button
+                        key={item.code}
+                        onClick={() => setLang(item.code)}
+                        title={item.full}
+                        className={`px-1.5 sm:px-2.5 py-1 rounded-[2px] font-field-bold text-[9px] sm:text-xs tracking-[0.14em] uppercase transition-all ${
+                          isActive
+                            ? 'bg-[#B40023] text-[#FCF0D6] shadow-sm'
+                            : 'text-black/65 hover:text-[#B40023]'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* ================================================================
+              3. SECCIÓ DE PROJECTES (#projects)
+          ================================================================ */}
+          <section
+            id="projects"
+            className="relative z-10 bg-[#000000] text-[#FCF0D6] pt-14 sm:pt-28 pb-16 sm:pb-24 px-4 sm:px-10 lg:px-16 overflow-hidden"
+          >
+            <div className="relative z-10 max-w-[1600px] mx-auto mb-8 sm:mb-12 flex items-center justify-between border-b border-[#FCF0D6]/15 pb-3.5 sm:pb-4">
+              <span className="text-[#B40023] font-field-bold text-[11px] sm:text-sm tracking-[0.24em] sm:tracking-[0.28em] uppercase">
+                {ui.sectionProjects}
+              </span>
+              <span className="font-field-medium text-[10px] sm:text-[11px] tracking-[0.22em] uppercase text-[#FCF0D6]/40">
+                [{String(projects.length).padStart(2, '0')} {ui.filmsCount}]
+              </span>
+            </div>
+
+            <div className="relative z-10 max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
+              {projects.map((project) => (
+                <FixedEditorialProjectCard
+                  key={project.id}
+                  project={project}
+                  lang={lang}
+                  ui={ui}
+                  onSelect={(proj) => setActiveProject(proj)}
+                />
+              ))}
+            </div>
+
+            {/* Frase "IT'S A WRAP" completa i llegible al final dels projectes */}
+            <div className="relative z-10 max-w-[1600px] mx-auto mt-16 sm:mt-28 pt-8 sm:pt-10 border-t border-[#FCF0D6]/10 flex flex-col items-center justify-center text-center select-none">
+              <p className="font-field-bold text-3xl sm:text-6xl md:text-7xl lg:text-8xl tracking-[0.14em] text-[#FCF0D6]/20 uppercase leading-none">
+                IT’S A WRAP
+              </p>
+            </div>
+          </section>
+
+          {/* ================================================================
+              4. SECCIÓ SOBRE NOSALTRES (#about) — FOTO EN BLANC I NEGRE
+          ================================================================ */}
+          <section
+            id="about"
+            className="relative z-10 bg-[#050505] text-[#FCF0D6] border-t border-[#FCF0D6]/15 overflow-hidden"
+          >
+            <div className="relative w-full min-h-[72dvh] sm:min-h-[85vh] flex flex-col justify-between p-5 sm:p-12 lg:p-20">
+              <div className="absolute inset-0 z-0 overflow-hidden bg-black">
+                <img
+                  src={aboutPhotoUrl}
+                  alt="Marc Martos i Jordi Riberaygua treballant en rodatge"
+                  className="w-full h-full object-cover object-center grayscale contrast-125 brightness-[0.68] transition-transform duration-1000"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/70" />
+              </div>
+
+              <div className="relative z-10 max-w-[1600px] w-full mx-auto flex items-center justify-between border-b border-[#FCF0D6]/25 pb-3.5 sm:pb-4">
+                <span className="font-field-bold text-[11px] sm:text-sm tracking-[0.24em] sm:tracking-[0.28em] uppercase text-[#B40023]">
+                  {ui.sectionAbout}
+                </span>
+                <span className="font-field-medium text-[10px] sm:text-xs tracking-[0.22em] uppercase text-[#FCF0D6]/60">
+                  ANDORRA
+                </span>
+              </div>
+
+              <div className="relative z-10 my-auto py-16 sm:py-24" />
+
+              <div className="relative z-10 max-w-[1600px] w-full mx-auto pt-6 sm:pt-8 border-t border-[#FCF0D6]/20 flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8">
+                <div className="max-w-2xl space-y-2.5 sm:space-y-3">
+                  <span className="inline-block px-2.5 py-1 bg-[#B40023] text-[#FCF0D6] font-field-bold text-[9px] sm:text-[10px] tracking-[0.25em] uppercase">
+                    {ui.aboutBadge}
+                  </span>
+                  <h2 className="font-field-bold text-2xl sm:text-4xl lg:text-[2.75rem] uppercase leading-[1.04] tracking-tight text-[#FCF0D6]">
+                    {ui.aboutQuotePart1}{' '}
+                    <span className="text-[#B40023]">{ui.aboutQuotePart2}</span>
+                  </h2>
+                </div>
+
+                <div className="max-w-md space-y-1.5 sm:space-y-2 lg:text-right">
+                  <p className="font-field-bold text-[11px] sm:text-sm tracking-[0.2em] uppercase text-[#FCF0D6]">
+                    {ui.coFounders}
+                  </p>
+                  <p className="font-field-regular text-xs sm:text-sm text-[#FCF0D6]/75 leading-relaxed">
+                    {ui.aboutBio}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ================================================================
+              5. FOOTER EN VENTURA RED (#B40023) AMB films@ventura.ad
+          ================================================================ */}
+          <footer className="relative z-10 bg-[#B40023] text-[#FCF0D6] pt-16 sm:pt-32 pb-12 sm:pb-14 px-5 sm:px-12 lg:px-20 overflow-hidden border-t border-[#FCF0D6]/20">
+            <div className="max-w-[1500px] mx-auto">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10 sm:gap-12 pb-14 sm:pb-20 border-b border-[#FCF0D6]/25">
+                <div className="space-y-4 sm:space-y-5 max-w-3xl w-full">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 font-field-bold text-[10px] sm:text-xs tracking-[0.25em] sm:tracking-[0.3em] uppercase text-[#FCF0D6]/80">
+                    <span>{ui.footerOverline1}</span>
+                    <span>•</span>
+                    <span>{ui.footerOverline2}</span>
+                  </div>
+                  <h2 className="font-field-bold text-3xl sm:text-6xl lg:text-7xl uppercase leading-[0.94] tracking-tight text-[#FCF0D6]">
+                    {ui.footerHeadline}
+                  </h2>
+
+                  <div className="pt-3 sm:pt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 sm:gap-6">
+                    <a
+                      href="mailto:films@ventura.ad"
+                      className="group inline-flex items-center justify-between sm:justify-start gap-4 bg-[#000000] text-[#FCF0D6] hover:bg-[#FCF0D6] hover:text-[#000000] px-6 sm:px-10 py-4 sm:py-5 rounded-[3px] font-field-bold text-xl sm:text-3xl md:text-4xl tracking-tight transition-all duration-300 shadow-2xl"
+                    >
+                      <span>films@ventura.ad</span>
+                      <IconArrowUpRight className="w-6 h-6 sm:w-9 sm:h-9 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1 shrink-0" />
+                    </a>
+
+                    <button
+                      onClick={handleCopyEmail}
+                      className="px-5 py-4 sm:py-5 rounded-[3px] border-2 border-[#FCF0D6] text-[#FCF0D6] hover:bg-[#FCF0D6] hover:text-[#B40023] font-field-bold text-xs tracking-[0.22em] uppercase flex items-center justify-center gap-2.5 transition-colors"
+                    >
+                      {emailCopied ? (
+                        <>
+                          <IconCheck className="w-4 h-4" />
+                          <span>{ui.copiedEmail}</span>
+                        </>
+                      ) : (
+                        <>
+                          <IconCopy className="w-4 h-4" />
+                          <span>{ui.copyEmail}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="self-center lg:self-auto">
+                  <ItsAWrapSeal className="w-28 h-28 sm:w-44 sm:h-44" color="#FCF0D6" spin={true} />
+                </div>
+              </div>
+
+              <div className="py-10 sm:py-16 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
+                <a
+                  href="#top"
+                  onClick={scrollToTop}
+                  className="font-nicholas text-[23vw] md:text-[15vw] leading-[0.82] text-[#FCF0D6] hover:text-white transition-colors select-none"
+                >
+                  Ventura
+                </a>
+                <div className="flex flex-col items-center md:items-end gap-2.5 sm:gap-3 font-field-medium text-[11px] sm:text-xs tracking-[0.22em] uppercase text-[#FCF0D6]/85 text-center md:text-right">
+                  <VenturaIsotipo className="w-10 h-10 sm:w-12 sm:h-12 mb-1" color="#FCF0D6" />
+                  <span>ANDORRA • +376 833 866</span>
+                  <span>JORDI RIBERAYGUA &amp; MARC MARTOS</span>
+                  <div className="flex items-center gap-2 text-[#FCF0D6]/60">
+                    <span>© {new Date().getFullYear()} VENTURA FILMS. IT’S A WRAP.</span>
+                    {/* Cadenat discret per obrir el CMS del Director (Shift + D) */}
+                    <button
+                      onClick={() =>
+                        isAdminUnlocked ? setIsStudioDrawerOpen(true) : setShowPinPrompt(true)
+                      }
+                      className="opacity-25 hover:opacity-100 transition-opacity p-1"
+                      title="Accés Director CMS (Shift + D)"
+                      aria-label="Accés Director CMS"
+                    >
+                      {isAdminUnlocked ? (
+                        <IconUnlock className="w-3 h-3 text-[#FFD447]" />
+                      ) : (
+                        <IconLock className="w-3 h-3" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </footer>
+
+          {/* ================================================================
+              6. MODAL CINEMA QUAN ES FA CLIC A UNA TARGETA DE PROJECTE
+          ================================================================ */}
+          {activeProject && (() => {
+            const localized = getLocalizedProject(activeProject, lang);
+            return (
+              <div
+                className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl overflow-y-auto animate-fadeIn"
+                onClick={() => setActiveProject(null)}
+              >
+                <div
+                  className="max-w-6xl mx-auto min-h-screen py-6 sm:py-10 px-4 sm:px-8 flex flex-col justify-center"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between gap-3 border-b border-[#FCF0D6]/20 pb-4 sm:pb-5 mb-5 sm:mb-6">
+                    <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 min-w-0">
+                      <span className="px-2.5 py-1 bg-[#B40023] text-[#FCF0D6] font-field-bold text-[10px] sm:text-xs tracking-[0.2em] uppercase shrink-0">
+                        {ui.modalProject} {activeProject.index}
+                      </span>
+                      <h2 className="font-field-bold text-xl sm:text-4xl uppercase text-white tracking-tight truncate">
+                        {activeProject.title}
+                      </h2>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isAdminUnlocked && (
+                        <button
+                          onClick={() => {
+                            setEditingProjectId(activeProject.id);
+                            setAdminTab('projects');
+                            setIsStudioDrawerOpen(true);
+                          }}
+                          className="px-3 py-2 bg-[#FFD447] text-black font-field-bold text-[10px] tracking-[0.2em] uppercase rounded-[2px]"
+                        >
+                          EDITAR AL CMS
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setActiveProject(null)}
+                        className="px-3.5 sm:px-4 py-2 bg-[#FCF0D6] text-black hover:bg-[#B40023] hover:text-[#FCF0D6] font-field-bold text-[10px] sm:text-xs tracking-[0.22em] uppercase flex items-center gap-1.5 sm:gap-2 transition-colors rounded-[2px]"
+                      >
+                        <span>{ui.modalClose}</span>
+                        <IconX className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Reproductor 16:9 Vimeo / YouTube */}
+                  <div className="relative w-full aspect-video bg-[#080808] border border-[#FCF0D6]/20 rounded-[3px] overflow-hidden shadow-[0_30px_100px_rgba(180,0,35,0.25)] mb-6 sm:mb-8">
+                    <iframe
+                      key={activeProject.embedUrl}
+                      src={activeProject.embedUrl}
+                      title={activeProject.title}
+                      className="w-full h-full"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+
+                  {/* Metadades principals: Durada, Tipus, Localització */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <div className="bg-[#0A0A0A] border border-[#FCF0D6]/15 p-3.5 sm:p-4 rounded-[3px] flex items-center gap-3.5">
+                      <IconClock className="w-5 h-5 text-[#B40023] shrink-0" />
+                      <div>
+                        <div className="font-field-medium text-[10px] tracking-[0.24em] uppercase text-[#FCF0D6]/50">
+                          {ui.modalDuration}
+                        </div>
+                        <div className="font-field-bold text-sm sm:text-base text-[#FCF0D6] uppercase">
+                          {activeProject.duration}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#0A0A0A] border border-[#FCF0D6]/15 p-3.5 sm:p-4 rounded-[3px] flex items-center gap-3.5">
+                      <IconTag className="w-5 h-5 text-[#B40023] shrink-0" />
+                      <div>
+                        <div className="font-field-medium text-[10px] tracking-[0.24em] uppercase text-[#FCF0D6]/50">
+                          {ui.modalType}
+                        </div>
+                        <div className="font-field-bold text-sm sm:text-base text-[#FCF0D6] uppercase">
+                          {localized.type}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#0A0A0A] border border-[#FCF0D6]/15 p-3.5 sm:p-4 rounded-[3px] flex items-center gap-3.5">
+                      <IconMapPin className="w-5 h-5 text-[#B40023] shrink-0" />
+                      <div>
+                        <div className="font-field-medium text-[10px] tracking-[0.24em] uppercase text-[#FCF0D6]/50">
+                          {ui.modalLocation}
+                        </div>
+                        <div className="font-field-bold text-sm sm:text-base text-[#FCF0D6] uppercase">
+                          {activeProject.location}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sinopsi i Crèdits */}
+                  <div className="bg-[#0A0A0A] border border-[#FCF0D6]/10 p-5 sm:p-8 rounded-[3px] space-y-4">
+                    <h4 className="font-field-bold text-xs tracking-[0.25em] uppercase text-[#B40023]">
+                      {ui.modalSynopsis}
+                    </h4>
+                    <p className="font-field-regular text-sm sm:text-lg text-[#FCF0D6]/90 leading-relaxed">
+                      {localized.description}
+                    </p>
+                    <div className="pt-3 border-t border-[#FCF0D6]/10 flex flex-wrap gap-x-6 gap-y-2 text-[11px] sm:text-xs font-field-medium tracking-wider uppercase text-[#FCF0D6]/60">
+                      <span>{activeProject.credits}</span>
+                      {activeProject.awards && (
+                        <span className="text-[#FFD447]">★ {activeProject.awards}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ================================================================
+              7. ACCÉS PRIVAT DEL DIRECTOR (CONTRASENYA: "ventura" o "833866")
+          ================================================================ */}
+          {showPinPrompt && (
+            <div
+              className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
+              onClick={() => setShowPinPrompt(false)}
+            >
+              <form
+                onSubmit={handleVerifyPin}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-sm bg-[#0B0B0B] border border-[#FCF0D6]/25 p-6 sm:p-8 rounded-[3px] space-y-5 shadow-2xl"
+              >
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <VenturaIsotipo className="w-6 h-6" color="#B40023" />
+                    <span className="font-field-bold text-xs tracking-[0.22em] uppercase text-[#FCF0D6]">
+                      ACCÉS PRIVAT DIRECTOR
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPinPrompt(false)}
+                    className="text-[#FCF0D6]/50 hover:text-white"
+                  >
+                    <IconX className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block font-field-medium text-[11px] tracking-[0.2em] uppercase text-[#FCF0D6]/70">
+                    CONTRASENYA D'ESTUDI:
+                  </label>
+                  <input
+                    type="password"
+                    autoFocus
+                    value={pinInput}
+                    onChange={(e) => {
+                      setPinInput(e.target.value);
+                      setPinError(false);
+                    }}
+                    placeholder="Contrasenya..."
+                    className="w-full bg-black border border-white/25 px-3.5 py-2.5 text-sm text-[#FCF0D6] rounded-[2px] focus:outline-none focus:border-[#B40023]"
+                  />
+                  {pinError && (
+                    <p className="font-field-medium text-[11px] text-[#B40023] uppercase tracking-wider">
+                      Contrasenya incorrecta. Prova &quot;ventura&quot;.
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-[#B40023] hover:bg-red-700 text-[#FCF0D6] font-field-bold text-xs tracking-[0.22em] uppercase rounded-[2px] transition-colors"
+                >
+                  DESBLOQUEJAR CMS
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* ================================================================
+              8. PANELL CMS PRIVAT DEL DIRECTOR
+          ================================================================ */}
+          {isAdminUnlocked && (
+            <button
+              onClick={() => setIsStudioDrawerOpen(true)}
+              className="fixed bottom-5 right-5 z-40 px-4 py-2.5 bg-[#B40023] hover:bg-red-700 text-[#FCF0D6] border border-[#FCF0D6]/30 rounded-[2px] font-field-bold text-[10px] tracking-[0.22em] uppercase flex items-center gap-2 shadow-2xl transition-all"
+            >
+              <IconSliders className="w-3.5 h-3.5" />
+              <span>DIRECTOR CMS (OBERT)</span>
+            </button>
+          )}
+
+          {isAdminUnlocked && isStudioDrawerOpen && (
+            <div
+              className="fixed inset-0 z-[115] bg-black/80 backdrop-blur-md flex justify-end"
+              onClick={() => setIsStudioDrawerOpen(false)}
+            >
+              <div
+                className="w-full max-w-xl bg-[#0B0B0B] border-l border-[#FCF0D6]/20 h-full p-5 sm:p-8 overflow-y-auto flex flex-col justify-between text-[#FCF0D6]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b border-white/15 pb-4">
+                    <div className="flex items-center gap-2.5">
+                      <VenturaIsotipo className="w-6 h-6" color="#B40023" />
+                      <div>
+                        <h3 className="font-field-bold text-sm tracking-[0.2em] uppercase">
+                          VENTURA DIRECTOR CMS
+                        </h3>
+                        <span className="text-[10px] font-field-medium tracking-widest text-[#FFD447] uppercase">
+                          NOMÉS VISIBLE PER A TU • OCULT AL PÚBLIC
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setIsAdminUnlocked(false);
+                          setIsStudioDrawerOpen(false);
+                        }}
+                        className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-[10px] font-field-bold tracking-wider uppercase rounded-[2px]"
+                      >
+                        BLOQUEJAR
+                      </button>
+                      <button
+                        onClick={() => setIsStudioDrawerOpen(false)}
+                        className="p-1.5 hover:bg-white/10 rounded"
+                      >
+                        <IconX className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 bg-black p-1 rounded-[3px] border border-white/10">
+                    <button
+                      onClick={() => setAdminTab('projects')}
+                      className={`py-2 font-field-bold text-[10px] tracking-[0.18em] uppercase rounded-[2px] transition-colors ${
+                        adminTab === 'projects' ? 'bg-[#B40023] text-white' : 'text-[#FCF0D6]/60 hover:text-white'
+                      }`}
+                    >
+                      1. PROJECTES ({projects.length})
+                    </button>
+                    <button
+                      onClick={() => setAdminTab('global')}
+                      className={`py-2 font-field-bold text-[10px] tracking-[0.18em] uppercase rounded-[2px] transition-colors ${
+                        adminTab === 'global' ? 'bg-[#B40023] text-white' : 'text-[#FCF0D6]/60 hover:text-white'
+                      }`}
+                    >
+                      2. HERO / B&amp;W / TTF
+                    </button>
+                    <button
+                      onClick={() => setAdminTab('export')}
+                      className={`py-2 font-field-bold text-[10px] tracking-[0.18em] uppercase rounded-[2px] transition-colors ${
+                        adminTab === 'export' ? 'bg-[#B40023] text-white' : 'text-[#FCF0D6]/60 hover:text-white'
+                      }`}
+                    >
+                      3. EXPORTAR JSON
+                    </button>
+                  </div>
+
+                  {adminTab === 'projects' && currentEditingProject && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <select
+                          value={editingProjectId}
+                          onChange={(e) => setEditingProjectId(e.target.value)}
+                          className="flex-1 bg-black border border-white/25 px-3 py-2.5 text-xs font-field-bold uppercase text-[#FCF0D6] rounded-[2px]"
+                        >
+                          {projects.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              [{p.index}] {p.title}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={handleAddNewProject}
+                          className="px-3 py-2.5 bg-white/10 hover:bg-[#B40023] text-[#FCF0D6] font-field-bold text-[10px] tracking-wider uppercase rounded-[2px] flex items-center gap-1 shrink-0"
+                        >
+                          <IconPlus className="w-3.5 h-3.5" />
+                          <span>NOU</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <div className="col-span-2">
+                          <label className="block text-[10px] font-field-medium uppercase tracking-wider text-[#FCF0D6]/60 mb-1">
+                            TÍTOL
+                          </label>
+                          <input
+                            type="text"
+                            value={currentEditingProject.title}
+                            onChange={(e) => handleAdminProjectChange('title', e.target.value)}
+                            className="w-full bg-black border border-white/20 px-2.5 py-2 text-xs text-[#FCF0D6] rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-field-medium uppercase tracking-wider text-[#FCF0D6]/60 mb-1">
+                            DURADA
+                          </label>
+                          <input
+                            type="text"
+                            value={currentEditingProject.duration}
+                            onChange={(e) => handleAdminProjectChange('duration', e.target.value)}
+                            className="w-full bg-black border border-white/20 px-2.5 py-2 text-xs text-[#FCF0D6] rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-field-medium uppercase tracking-wider text-[#FCF0D6]/60 mb-1">
+                            ANY
+                          </label>
+                          <input
+                            type="text"
+                            value={currentEditingProject.year}
+                            onChange={(e) => handleAdminProjectChange('year', e.target.value)}
+                            className="w-full bg-black border border-white/20 px-2.5 py-2 text-xs text-[#FCF0D6] rounded-[2px]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-[10px] font-field-medium uppercase tracking-wider text-[#FCF0D6]/60 mb-1">
+                            LOCALITZACIÓ
+                          </label>
+                          <input
+                            type="text"
+                            value={currentEditingProject.location}
+                            onChange={(e) => handleAdminProjectChange('location', e.target.value)}
+                            className="w-full bg-black border border-white/20 px-2.5 py-2 text-xs text-[#FCF0D6] rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-field-medium uppercase tracking-wider text-[#FCF0D6]/60 mb-1">
+                            PREMIS / FESTIVALS
+                          </label>
+                          <input
+                            type="text"
+                            value={currentEditingProject.awards}
+                            onChange={(e) => handleAdminProjectChange('awards', e.target.value)}
+                            className="w-full bg-black border border-white/20 px-2.5 py-2 text-xs text-[#FCF0D6] rounded-[2px]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2.5 pt-2 border-t border-white/10">
+                        <div>
+                          <label className="block text-[10px] font-field-medium uppercase tracking-wider text-[#FFD447] mb-1">
+                            ENLLAÇ VIMEO O YOUTUBE (S'OBRE EN FER CLIC)
+                          </label>
+                          <input
+                            type="text"
+                            value={currentEditingProject.embedUrl}
+                            onChange={(e) => handleAdminProjectChange('embedUrl', e.target.value)}
+                            className="w-full bg-black border border-white/20 px-2.5 py-2 text-xs text-[#FCF0D6] rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-field-medium uppercase tracking-wider text-[#FCF0D6]/60 mb-1">
+                            VÍDEO CURT EN LOOP DE LA TARGETA (.MP4)
+                          </label>
+                          <input
+                            type="text"
+                            value={currentEditingProject.videoPreview}
+                            onChange={(e) => handleAdminProjectChange('videoPreview', e.target.value)}
+                            className="w-full bg-black border border-white/20 px-2.5 py-2 text-xs text-[#FCF0D6] rounded-[2px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-field-medium uppercase tracking-wider text-[#FCF0D6]/60 mb-1">
+                            IMATGE PÒSTER DE LA TARGETA (URL)
+                          </label>
+                          <input
+                            type="text"
+                            value={currentEditingProject.poster}
+                            onChange={(e) => handleAdminProjectChange('poster', e.target.value)}
+                            className="w-full bg-black border border-white/20 px-2.5 py-2 text-xs text-[#FCF0D6] rounded-[2px]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 pt-3 border-t border-white/10">
+                        <div className="flex items-center justify-between">
+                          <span className="font-field-bold text-[10px] tracking-[0.2em] uppercase text-[#B40023]">
+                            TEXTOS EN {LANGUAGES.find((l) => l.code === lang)?.full.toUpperCase()} ({lang.toUpperCase()})
+                          </span>
+                          <div className="flex gap-1">
+                            {LANGUAGES.map((l) => (
+                              <button
+                                key={l.code}
+                                type="button"
+                                onClick={() => setLang(l.code)}
+                                className={`px-2 py-0.5 text-[10px] font-field-bold uppercase rounded-[2px] ${
+                                  lang === l.code ? 'bg-[#B40023] text-white' : 'bg-white/10 text-white/60'
+                                }`}
+                              >
+                                {l.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-field-medium uppercase tracking-wider text-[#FCF0D6]/60 mb-1">
+                            CATEGORIA / TIPUS ({lang.toUpperCase()})
+                          </label>
+                          <input
+                            type="text"
+                            value={currentEditingProject.i18n?.[lang]?.type || ''}
+                            onChange={(e) => handleAdminProjectChange('type', e.target.value, lang)}
+                            className="w-full bg-black border border-white/20 px-2.5 py-2 text-xs text-[#FCF0D6] rounded-[2px]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-field-medium uppercase tracking-wider text-[#FCF0D6]/60 mb-1">
+                            FRASE CURTA DE LA TARGETA ({lang.toUpperCase()})
+                          </label>
+                          <input
+                            type="text"
+                            value={currentEditingProject.i18n?.[lang]?.shortDesc || ''}
+                            onChange={(e) => handleAdminProjectChange('shortDesc', e.target.value, lang)}
+                            className="w-full bg-black border border-white/20 px-2.5 py-2 text-xs text-[#FCF0D6] rounded-[2px]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-field-medium uppercase tracking-wider text-[#FCF0D6]/60 mb-1">
+                            SINOPSI COMPLETA DEL MODAL ({lang.toUpperCase()})
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={currentEditingProject.i18n?.[lang]?.description || ''}
+                            onChange={(e) => handleAdminProjectChange('description', e.target.value, lang)}
+                            className="w-full bg-black border border-white/20 px-2.5 py-2 text-xs text-[#FCF0D6] rounded-[2px]"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => saveChanges(projects, heroVideoUrl, aboutPhotoUrl)}
+                        className="w-full py-3 bg-[#B40023] hover:bg-red-700 text-white font-field-bold text-xs tracking-[0.22em] uppercase rounded-[2px] flex items-center justify-center gap-2 transition-colors"
+                      >
+                        <IconSave className="w-4 h-4" />
+                        <span>{saveStatus || 'DESAR ELS CANVIS'}</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {adminTab === 'global' && (
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <div className="font-field-bold text-xs tracking-[0.2em] uppercase text-[#B40023]">
+                          1. VÍDEO PRINCIPAL DE PORTADA (.MP4)
+                        </div>
+                        <input
+                          type="text"
+                          value={heroVideoUrl}
+                          onChange={(e) => setHeroVideoUrl(e.target.value)}
+                          className="w-full bg-black border border-white/20 px-3 py-2.5 text-xs text-[#FCF0D6] rounded-[2px]"
+                        />
+                      </div>
+
+                      <div className="space-y-2.5 pt-4 border-t border-white/10">
+                        <div className="font-field-bold text-xs tracking-[0.2em] uppercase text-[#B40023]">
+                          2. FOTO B&amp;W MARC I JORDI (SOBRE NOSALTRES)
+                        </div>
+                        <label className="block p-3.5 border border-dashed border-[#FCF0D6]/30 hover:border-[#B40023] rounded-[3px] cursor-pointer transition-colors bg-black/50">
+                          <div className="flex items-center justify-between">
+                            <span className="font-field-bold text-xs uppercase text-[#FCF0D6]">
+                              PUJAR FOTO DES DE L'ORDINADOR / MÒBIL
+                            </span>
+                            <IconUpload className="w-4 h-4 text-[#B40023]" />
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAboutPhotoUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        <input
+                          type="text"
+                          value={aboutPhotoUrl}
+                          onChange={(e) => setAboutPhotoUrl(e.target.value)}
+                          placeholder="O enganxa l'enllaç directe de la foto..."
+                          className="w-full bg-black border border-white/20 px-3 py-2 text-xs text-[#FCF0D6] rounded-[2px]"
+                        />
+                      </div>
+
+                      <div className="space-y-3 pt-4 border-t border-white/10">
+                        <div className="font-field-bold text-xs tracking-[0.2em] uppercase text-[#B40023]">
+                          3. PROVAR ARXIUS .TTF EN VIU
+                        </div>
+                        <label className="block p-3.5 border border-dashed border-[#FCF0D6]/30 hover:border-[#B40023] rounded-[3px] cursor-pointer bg-black/50">
+                          <div className="flex items-center justify-between">
+                            <span className="font-nicholas text-base text-[#FCF0D6]">
+                              {loadedFontsStatus.nicholas ? `✓ ${loadedFontsStatus.nicholas}` : 'Carregar Nicholas.ttf'}
+                            </span>
+                            <IconUpload className="w-4 h-4 text-[#B40023]" />
+                          </div>
+                          <input
+                            type="file"
+                            accept=".ttf,.otf,.woff,.woff2"
+                            onChange={(e) => handleFontFileUpload(e, 'nicholas')}
+                            className="hidden"
+                          />
+                        </label>
+
+                        <label className="block p-3.5 border border-dashed border-[#FCF0D6]/30 hover:border-[#B40023] rounded-[3px] cursor-pointer bg-black/50">
+                          <div className="flex items-center justify-between">
+                            <span className="font-field-bold text-xs uppercase text-[#FCF0D6]">
+                              {loadedFontsStatus.fieldGothic ? `✓ ${loadedFontsStatus.fieldGothic}` : 'Carregar FieldGothicWide.ttf'}
+                            </span>
+                            <IconUpload className="w-4 h-4 text-[#B40023]" />
+                          </div>
+                          <input
+                            type="file"
+                            accept=".ttf,.otf,.woff,.woff2"
+                            onChange={(e) => handleFontFileUpload(e, 'fieldGothic')}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => saveChanges(projects, heroVideoUrl, aboutPhotoUrl)}
+                        className="w-full py-3 bg-[#B40023] hover:bg-red-700 text-white font-field-bold text-xs tracking-[0.22em] uppercase rounded-[2px] flex items-center justify-center gap-2"
+                      >
+                        <IconSave className="w-4 h-4" />
+                        <span>{saveStatus || 'DESAR CANVIS GLOBALS'}</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {adminTab === 'export' && (
+                    <div className="space-y-4">
+                      <div className="font-field-bold text-xs tracking-[0.2em] uppercase text-[#B40023]">
+                        EXPORTACIÓ PERMANENT PER A VERCEL
+                      </div>
+                      <p className="font-field-regular text-xs text-[#FCF0D6]/75 leading-relaxed">
+                        Quan hagis omplert tots els teus vídeos de Vimeo/YouTube i descripcions des d'aquí, copia aquest JSON i envia-me'l pel xat (o substitueix <code className="text-[#FFD447]">INITIAL_PROJECTS</code> dins l'arxiu <code className="text-[#FFD447]">index.html</code>) perquè quedi gravat permanentment al teu domini <strong className="text-white">ventura.ad</strong>:
+                      </p>
+                      <pre className="bg-black border border-white/15 p-3 rounded-[2px] text-[10px] text-[#FCF0D6]/80 overflow-x-auto max-h-64">
+                        {JSON.stringify({ heroVideoUrl, aboutPhotoUrl, projects }, null, 2)}
+                      </pre>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          copyTextToClipboard(
+                            JSON.stringify({ heroVideoUrl, aboutPhotoUrl, projects }, null, 2)
+                          );
+                          setExportedCopied(true);
+                          setTimeout(() => setExportedCopied(false), 2500);
+                        }}
+                        className="w-full py-3 bg-[#FCF0D6] text-black hover:bg-[#B40023] hover:text-white font-field-bold text-xs tracking-[0.22em] uppercase rounded-[2px] flex items-center justify-center gap-2 transition-colors"
+                      >
+                        <IconCode className="w-4 h-4" />
+                        <span>{exportedCopied ? 'JSON COPIAT ✓' : 'COPIAR CONFIGURACIÓ JSON'}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-6 border-t border-white/10 flex items-center justify-between text-[10px] font-field-medium uppercase tracking-widest text-[#FCF0D6]/50">
+                  <span>DRECERA: SHIFT + D</span>
+                  <span>CONTRASENYA: ventura</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
