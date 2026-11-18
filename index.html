@@ -604,19 +604,58 @@
       }
     ];
 
-    // Helper per convertir URLs de YouTube o Vimeo en URLs d'embed netes
+    // Detecta si una URL és de YouTube, Vimeo o un arxiu de vídeo directe (.mp4)
+    function parseVideoSource(url) {
+      if (!url) return { type: 'direct', url: '' };
+      const trimmed = url.trim();
+      const ytMatch = trimmed.match(/(?:youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch) {
+        return { type: 'youtube', id: ytMatch[1], url: trimmed };
+      }
+      const vimeoPrivateMatch = trimmed.match(/vimeo\.com\/(\d+)\/([a-zA-Z0-9]+)/);
+      if (vimeoPrivateMatch) {
+        return { type: 'vimeo', id: vimeoPrivateMatch[1], hash: vimeoPrivateMatch[2], url: trimmed };
+      }
+      const vimeoMatch = trimmed.match(/(?:player\.)?vimeo\.com\/(?:video\/)?(\d+)/);
+      if (vimeoMatch) {
+        const hashMatch = trimmed.match(/[?&]h=([a-zA-Z0-9]+)/);
+        return { type: 'vimeo', id: vimeoMatch[1], hash: hashMatch ? hashMatch[1] : null, url: trimmed };
+      }
+      return { type: 'direct', url: trimmed };
+    }
+
+    // Genera l'URL de fons sense controls i en bucle per a YouTube o Vimeo
+    function getBackgroundEmbedUrl(source) {
+      if (source.type === 'youtube') {
+        const hasValidOrigin =
+          typeof window !== 'undefined' &&
+          window.location &&
+          window.location.origin &&
+          window.location.origin.startsWith('http');
+        const originParam = hasValidOrigin
+          ? `&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`
+          : '';
+        return `https://www.youtube.com/embed/${source.id}?autoplay=1&mute=1&loop=1&playlist=${source.id}&controls=0&rel=0&iv_load_policy=3&playsinline=1${originParam}`;
+      }
+      if (source.type === 'vimeo') {
+        const hParam = source.hash ? `h=${source.hash}&` : '';
+        return `https://player.vimeo.com/video/${source.id}?${hParam}background=1&autoplay=1&loop=1&muted=1&controls=0&byline=0&title=0&portrait=0&api=1`;
+      }
+      return source.url;
+    }
+
+    // Helper per convertir URLs de YouTube o Vimeo en URLs d'embed netes (per al modal)
     function normalizeVideoEmbedUrl(url) {
       if (!url) return '';
-      const trimmed = url.trim();
-      const ytMatch = trimmed.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-      if (ytMatch) {
-        return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0&modestbranding=1`;
+      const source = parseVideoSource(url);
+      if (source.type === 'youtube') {
+        return `https://www.youtube.com/embed/${source.id}?autoplay=1&rel=0&modestbranding=1`;
       }
-      const vimeoMatch = trimmed.match(/vimeo\.com\/(\d+)/);
-      if (vimeoMatch && !trimmed.includes('player.vimeo.com')) {
-        return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1&title=0&byline=0&portrait=0`;
+      if (source.type === 'vimeo') {
+        const hParam = source.hash ? `h=${source.hash}&` : '';
+        return `https://player.vimeo.com/video/${source.id}?${hParam}autoplay=1&title=0&byline=0&portrait=0`;
       }
-      return trimmed;
+      return source.url;
     }
 
     function getLocalizedProject(project, lang) {
@@ -657,12 +696,13 @@
     const FixedEditorialProjectCard = ({ project, lang, ui, onSelect }) => {
       const videoRef = useRef(null);
       const { type, shortDesc } = getLocalizedProject(project, lang);
+      const previewSource = parseVideoSource(project.videoPreview);
 
       useEffect(() => {
-        if (videoRef.current) {
+        if (previewSource.type === 'direct' && videoRef.current) {
           videoRef.current.play().catch(() => {});
         }
-      }, [project.videoPreview]);
+      }, [project.videoPreview, previewSource.type]);
 
       return (
         <article
@@ -692,18 +732,28 @@
             </div>
           </div>
 
-          {/* Vídeo en loop continu 16:10 */}
+          {/* Vídeo en loop continu 16:10 (suporta .mp4, YouTube i Vimeo) */}
           <div className="relative w-full aspect-[16/10] overflow-hidden rounded-[2px] bg-black mb-3 border border-white/5">
-            <video
-              ref={videoRef}
-              src={project.videoPreview}
-              poster={project.poster}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out filter brightness-90 contrast-110 group-hover:brightness-105"
-            />
+            {previewSource.type === 'direct' ? (
+              <video
+                ref={videoRef}
+                src={project.videoPreview}
+                poster={project.poster}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out filter brightness-90 contrast-110 group-hover:brightness-105"
+              />
+            ) : (
+              <iframe
+                key={project.videoPreview}
+                src={getBackgroundEmbedUrl(previewSource)}
+                title={project.title}
+                allow="autoplay; fullscreen; picture-in-picture"
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[125%] h-[125%] pointer-events-none filter brightness-90 contrast-110 group-hover:brightness-105 transition-all duration-700"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 opacity-70 group-hover:opacity-40 transition-opacity duration-300" />
 
             <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2 py-0.5 bg-black/70 backdrop-blur-md border border-white/10 rounded-[2px]">
@@ -751,13 +801,21 @@
       });
 
       const [heroVideoUrl, setHeroVideoUrl] = useState(() => {
-        return localStorage.getItem('ventura_cms_hero_v1') ||
-          'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-mountain-range-covered-in-snow-41467-large.mp4';
+        try {
+          return localStorage.getItem('ventura_cms_hero_v3') ||
+            'https://youtu.be/d2PcyTqQPik';
+        } catch (e) {
+          return 'https://youtu.be/d2PcyTqQPik';
+        }
       });
 
       const [aboutPhotoUrl, setAboutPhotoUrl] = useState(() => {
-        return localStorage.getItem('ventura_cms_about_photo_v1') ||
-          'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2200&q=90';
+        try {
+          return localStorage.getItem('ventura_cms_about_photo_v1') ||
+            'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2200&q=90';
+        } catch (e) {
+          return 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=2200&q=90';
+        }
       });
 
       const [activeProject, setActiveProject] = useState(null);
@@ -765,7 +823,7 @@
       const [isNavDocked, setIsNavDocked] = useState(false);
       const [emailCopied, setEmailCopied] = useState(false);
 
-      // Estat del CMS Privat del Director (ocult per als visitants)
+      // Estat privat del Director CMS (ocult per als visitants)
       const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
       const [showPinPrompt, setShowPinPrompt] = useState(false);
       const [pinInput, setPinInput] = useState('');
@@ -775,18 +833,22 @@
       const [editingProjectId, setEditingProjectId] = useState(INITIAL_PROJECTS[0].id);
       const [saveStatus, setSaveStatus] = useState('');
       const [exportedCopied, setExportedCopied] = useState(false);
-
       const [loadedFontsStatus, setLoadedFontsStatus] = useState({
         nicholas: false,
         fieldGothic: false
       });
 
       const heroVideoRef = useRef(null);
+      const heroIframeRef = useRef(null);
+      const heroSource = parseVideoSource(heroVideoUrl);
 
-      // Drecera secreta Shift + D o #admin a la URL per obrir el CMS del Director
+      // Drecera Shift + D o #admin per obrir el Director CMS
       useEffect(() => {
         const checkHash = () => {
-          if (window.location.hash === '#admin' || window.location.search.includes('admin=1')) {
+          if (
+            window.location.hash === '#admin' ||
+            window.location.search.includes('admin=1')
+          ) {
             setShowPinPrompt(true);
           }
         };
@@ -811,21 +873,7 @@
         };
       }, [isAdminUnlocked]);
 
-      // Desa els canvis al navegador i prepara l'exportació per a Vercel
-      const saveChanges = (updatedProjects = projects, updatedHero = heroVideoUrl, updatedPhoto = aboutPhotoUrl) => {
-        setSaveStatus('DESANT...');
-        try {
-          localStorage.setItem('ventura_cms_projects_v1', JSON.stringify(updatedProjects));
-          localStorage.setItem('ventura_cms_hero_v1', updatedHero);
-          localStorage.setItem('ventura_cms_about_photo_v1', updatedPhoto);
-          setSaveStatus('DESAT CORRECTAMENT ✓');
-        } catch (e) {
-          setSaveStatus('DESAT A LA SESSIÓ ✓');
-        }
-        setTimeout(() => setSaveStatus(''), 3000);
-      };
-
-      // Control del scroll per ancorar la barra blanca esmerilada a dalt
+      // Fixa la barra blanca esmerilada a dalt quan es fa scroll
       useEffect(() => {
         const handleScroll = () => {
           const dockThreshold = window.innerHeight - 84;
@@ -835,13 +883,56 @@
         return () => window.removeEventListener('scroll', handleScroll);
       }, []);
 
-      // Bloqueja l'scroll quan s'obre el reproductor d'un projecte
+      // Bloqueja el scroll del fons quan el modal de cinema està obert
       useEffect(() => {
-        document.body.style.overflow = activeProject ? 'hidden' : '';
-        return () => { document.body.style.overflow = ''; };
+        if (activeProject) {
+          document.body.style.overflow = 'hidden';
+        } else {
+          document.body.style.overflow = '';
+        }
+        return () => {
+          document.body.style.overflow = '';
+        };
       }, [activeProject]);
 
-      // Carregador en viu dels arxius .TTF des del teu Mac
+      // Desa els canvis al navegador i prepara l'exportació per a Vercel
+      const saveChanges = (updatedProjects = projects, updatedHero = heroVideoUrl, updatedPhoto = aboutPhotoUrl) => {
+        setSaveStatus('DESANT...');
+        try {
+          localStorage.setItem('ventura_cms_projects_v1', JSON.stringify(updatedProjects));
+          localStorage.setItem('ventura_cms_hero_v3', updatedHero);
+          localStorage.setItem('ventura_cms_about_photo_v1', updatedPhoto);
+          setSaveStatus('DESAT CORRECTAMENT ✓');
+        } catch (err) {
+          setSaveStatus('DESAT EN AQUESTA SESSIÓ ✓');
+        }
+        setTimeout(() => setSaveStatus(''), 3000);
+      };
+
+      // Control d'àudio compatible amb MP4, YouTube i Vimeo
+      const toggleHeroMute = () => {
+        const nextMuted = !isHeroMuted;
+        setIsHeroMuted(nextMuted);
+        if (heroSource.type === 'direct' && heroVideoRef.current) {
+          heroVideoRef.current.muted = nextMuted;
+        } else if (heroSource.type === 'youtube' && heroIframeRef.current?.contentWindow) {
+          try {
+            heroIframeRef.current.contentWindow.postMessage(
+              JSON.stringify({ event: 'command', func: nextMuted ? 'mute' : 'unMute', args: '' }),
+              '*'
+            );
+          } catch (e) {}
+        } else if (heroSource.type === 'vimeo' && heroIframeRef.current?.contentWindow) {
+          try {
+            heroIframeRef.current.contentWindow.postMessage(
+              JSON.stringify({ method: 'setVolume', value: nextMuted ? 0 : 1 }),
+              '*'
+            );
+          } catch (e) {}
+        }
+      };
+
+      // Càrrega dinàmica de tipografies .ttf / .otf en viu
       const handleFontFileUpload = async (e, fontTarget) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -853,11 +944,11 @@
           document.fonts.add(loadedFace);
           setLoadedFontsStatus((prev) => ({ ...prev, [fontTarget]: file.name }));
         } catch (err) {
-          console.error('Error carregant la font TTF:', err);
+          console.error('Error carregant la tipografia:', err);
         }
       };
 
-      // Pujada de la foto en Blanc i Negre d'en Marc i en Jordi
+      // Comprimeix i aplica la foto en blanc i negre de Sobre Nosaltres
       const handleAboutPhotoUpload = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -968,47 +1059,63 @@
       const currentEditingProject = projects.find((p) => p.id === editingProjectId) || projects[0];
 
       return (
-        <div className="min-h-screen bg-[#000000] text-[#FCF0D6] relative">
-          {/* Classes tipogràfiques dinàmiques que activen Nicholas.ttf i FieldGothicWide.ttf */}
-          <style dangerouslySetInnerHTML={{ __html: `
-            .font-nicholas {
-              font-family: ${loadedFontsStatus.nicholas ? "'NicholasCustom'," : ""} 'Nicholas', 'Fraunces', Georgia, serif;
-              font-weight: 900;
-              letter-spacing: -0.035em;
-            }
-            .font-field-bold {
-              font-family: ${loadedFontsStatus.fieldGothic ? "'FieldGothicCustom'," : ""} 'Field Gothic Wide', 'Archivo Black', 'Syne', sans-serif;
-              font-weight: 800;
-              letter-spacing: -0.015em;
-            }
-            .font-field-medium {
-              font-family: ${loadedFontsStatus.fieldGothic ? "'FieldGothicCustom'," : ""} 'Field Gothic Wide', 'Barlow Condensed', sans-serif;
-              font-weight: 600;
-            }
-            .font-field-regular {
-              font-family: ${loadedFontsStatus.fieldGothic ? "'FieldGothicCustom'," : ""} 'Field Gothic Wide', 'Barlow Condensed', system-ui, sans-serif;
-              font-weight: 400;
-            }
-          `}} />
+        <div id="top" className="min-h-screen bg-[#000000] text-[#FCF0D6] selection:bg-[#B40023] selection:text-[#FCF0D6] relative antialiased overflow-x-hidden">
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `
+                .font-nicholas {
+                  font-family: ${loadedFontsStatus.nicholas ? "'NicholasCustom'," : ""} 'Nicholas', 'Fraunces', Georgia, serif;
+                  font-weight: 900;
+                  letter-spacing: -0.035em;
+                  font-variation-settings: "SOFT" 50, "WONK" 1;
+                }
+                .font-field-bold {
+                  font-family: ${loadedFontsStatus.fieldGothic ? "'FieldGothicCustom'," : ""} 'Field Gothic Wide', 'Archivo Black', 'Syne', sans-serif;
+                  font-weight: 800;
+                  letter-spacing: -0.015em;
+                }
+                .font-field-medium {
+                  font-family: ${loadedFontsStatus.fieldGothic ? "'FieldGothicCustom'," : ""} 'Field Gothic Wide', 'Barlow Condensed', sans-serif;
+                  font-weight: 600;
+                }
+                .font-field-regular {
+                  font-family: ${loadedFontsStatus.fieldGothic ? "'FieldGothicCustom'," : ""} 'Field Gothic Wide', 'Barlow Condensed', system-ui, sans-serif;
+                  font-weight: 400;
+                }
+              `
+            }}
+          />
 
-          {/* Textura analògica 35mm */}
+          {/* Gra de pel·lícula analògica 35mm */}
           <div className="ventura-film-grain" />
 
           {/* ================================================================
-              1. HERO SECTION (VÍDEO A PANTALLA COMPLETA I TÍTOL REDUÏT A DALT)
+              1. PORTADA HERO A PANTALLA COMPLETA (MP4, YOUTUBE O VIMEO)
           ================================================================ */}
           <section className="relative w-full h-[calc(100dvh-4.5rem)] sm:h-[calc(100dvh-5rem)] min-h-[460px] overflow-hidden bg-black select-none">
-            <video
-              ref={heroVideoRef}
-              key={heroVideoUrl}
-              src={heroVideoUrl}
-              poster="https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=2400&q=90"
-              autoPlay
-              loop
-              muted={isHeroMuted}
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover object-center scale-[1.01] filter brightness-[0.88] contrast-[1.1]"
-            />
+            {heroSource.type === 'direct' ? (
+              <video
+                ref={heroVideoRef}
+                key={heroVideoUrl}
+                src={heroVideoUrl}
+                poster="https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=2400&q=90"
+                autoPlay
+                loop
+                muted={isHeroMuted}
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover object-center scale-[1.01] filter brightness-[0.88] contrast-[1.1]"
+              />
+            ) : (
+              <iframe
+                ref={heroIframeRef}
+                key={`${heroSource.type}-${heroSource.id}`}
+                src={getBackgroundEmbedUrl(heroSource)}
+                title="Ventura Films Showreel"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[max(100%,177.78vh)] h-[max(100%,56.25vw)] scale-[1.12] pointer-events-none filter brightness-[0.88] contrast-[1.1]"
+              />
+            )}
 
             <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-black/45 pointer-events-none" />
 
@@ -1022,7 +1129,7 @@
             {/* Botó de so discret */}
             <div className="absolute top-5 right-5 sm:top-7 sm:right-10 z-20">
               <button
-                onClick={() => setIsHeroMuted(!isHeroMuted)}
+                onClick={toggleHeroMute}
                 className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-[#B40023] backdrop-blur-md border border-white/20 flex items-center justify-center text-white transition-all duration-300"
                 title={isHeroMuted ? 'Activar àudio' : 'Silenciar àudio'}
               >
@@ -1640,7 +1747,7 @@
                         </div>
                         <div>
                           <label className="block text-[10px] font-field-medium uppercase tracking-wider text-[#FCF0D6]/60 mb-1">
-                            VÍDEO CURT EN LOOP DE LA TARGETA (.MP4)
+                            VÍDEO CURT EN LOOP DE LA TARGETA (YOUTUBE, VIMEO O .MP4)
                           </label>
                           <input
                             type="text"
@@ -1735,12 +1842,13 @@
                     <div className="space-y-6">
                       <div className="space-y-2">
                         <div className="font-field-bold text-xs tracking-[0.2em] uppercase text-[#B40023]">
-                          1. VÍDEO PRINCIPAL DE PORTADA (.MP4)
+                          1. VÍDEO PRINCIPAL DE PORTADA (YOUTUBE, VIMEO O .MP4)
                         </div>
                         <input
                           type="text"
                           value={heroVideoUrl}
                           onChange={(e) => setHeroVideoUrl(e.target.value)}
+                          placeholder="https://www.youtube.com/watch?v=... o https://vimeo.com/..."
                           className="w-full bg-black border border-white/20 px-3 py-2.5 text-xs text-[#FCF0D6] rounded-[2px]"
                         />
                       </div>
@@ -1862,4 +1970,3 @@
   </script>
 </body>
 </html>
-
