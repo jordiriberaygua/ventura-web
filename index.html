@@ -21,12 +21,13 @@
 
   <style>
     /* ======================================================================
-       1. TIPOGRAFIES OFICIALS DEL MANUAL DE MARCA (.TTF LOCALS A /fonts/)
-       Quan pugis la carpeta a Vercel, posa els teus .ttf dins la carpeta "fonts/"
+       1. TIPOGRAFIES OFICIALS DEL MANUAL DE MARCA (ARREL O /fonts/)
+       Detecta automàticament Nicholas.ttf i FielGothicWide.otf a l'arrel
     ====================================================================== */
     @font-face {
       font-family: 'Nicholas';
-      src: url('./fonts/Nicholas.ttf') format('truetype'),
+      src: url('./Nicholas.ttf') format('truetype'),
+           url('./fonts/Nicholas.ttf') format('truetype'),
            url('./fonts/Nicholas-ExtraBold.ttf') format('truetype');
       font-weight: 800 900;
       font-style: normal;
@@ -35,7 +36,10 @@
 
     @font-face {
       font-family: 'Field Gothic Wide';
-      src: url('./fonts/FieldGothicWide.ttf') format('truetype'),
+      src: url('./FieldGothicWide.otf') format('opentype'),
+           url('./FieldGothicWide.ttf') format('truetype'),
+           url('./fonts/FieldGothicWide.otf') format('opentype'),
+           url('./fonts/FieldGothicWide.ttf') format('truetype'),
            url('./fonts/FieldGothicWide-Bold.ttf') format('truetype');
       font-weight: 400 900;
       font-style: normal;
